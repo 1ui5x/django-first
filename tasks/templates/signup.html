@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+
+{% block content %}
+{% load widget_tweaks %}
+<main class="container">
+<div class="row">
+<section class="col-md-4 offset-md-4 text-center">
+<div class="view-header">
+    <h1 class="view-title">Sign Up</h1>
+    <span class="view-subtitle">Crear cuenta</span>
+</div>
+
+
+
+       {{ error }}
+ 
+
+<form action="/signup/" method="POST" class="card-body">
+{% csrf_token %}
+{% for field in form %}
+      <div class="mb-3">
+        <label>{{ field.label }}</label>
+        {# Aquí inyectamos la clase de Bootstrap y nuestra lógica neón #}
+        {{ field|add_class:"form-control search-box-dark-text" }}
+        
+        {% if field.errors %}
+          <div class="text-danger small">{{ field.errors }}</div>
+        {% endif %}
+      </div>
+    {% endfor %}
+
+<button  class="btn btn-neon-aqua px-4">
+        <i class="bi bi-check-circle me-1"></i> Guardar
+    </button>
+      
+</form>
+</section>
+</div>
+</main>
+{% endblock %}

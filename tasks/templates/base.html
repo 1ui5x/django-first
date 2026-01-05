@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DJango CRUD</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+
+<style>
+/* 1. Base del cuerpo */
+body {
+  transition: all 0.3s ease-in-out; /* Transición suave para el movimiento */
+  padding-top: 80px;
+  margin-left: 0;
+}
+
+/* 2. Cuando el sidebar está ABIERTO (Desktop) */
+@media (min-width: 992px) {
+  /* Si el offcanvas tiene la clase 'show', empujamos el body */
+  body:has(.offcanvas.show) {
+    padding-left: 280px;
+  }
+}
+
+/* 3. Ajuste para el contenedor de Django */
+main.container {
+  max-width: 100%; /* Permite que el texto use todo el espacio disponible */
+  padding-left: 2rem;
+  padding-right: 2rem;
+  transition: all 0.3s ease-in-out;
+}
+
+
+
+
+</style>
+
+<style>
+  :root {
+    --aqua-neon: #00f2ff;
+    --dark-bg: #12121b;
+  }
+
+  /* Personalización del Sidebar */
+  .offcanvas {
+    border: none !important;
+    box-shadow: 5px 0 25px rgba(0, 242, 255, 0.1); /* Resplandor lateral sutil */
+    background: var(--dark-bg);
+    color: #ffffff;
+    width: 280px !important;
+  }
+
+  .offcanvas-header {
+    border-bottom: 1px solid rgba(0, 242, 255, 0.1);
+    padding: 1.5rem;
+  }
+
+  .offcanvas-title {
+    font-weight: 800;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    font-size: 1.1rem;
+    color: var(--aqua-neon);
+    /* Efecto neón suave en el título */
+    text-shadow: 0 0 10px rgba(0, 242, 255, 0.5);
+  }
+
+  /* Estilo de los links */
+  .nav-link {
+    color: #a2a3b7 !important;
+    padding: 0.8rem 1rem !important;
+    margin: 0.4rem 0.8rem;
+    border-radius: 8px;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border: 1px solid transparent;
+  }
+
+  /* --- EFECTO HOVER NEÓN --- */
+  .nav-link:hover {
+    color: #ffffff !important;
+    background: rgba(0, 242, 255, 0.05);
+    border: 1px solid rgba(0, 242, 255, 0.3);
+    /* El resplandor neón */
+    box-shadow: 0 0 15px rgba(0, 242, 255, 0.2), inset 0 0 5px rgba(0, 242, 255, 0.1);
+    transform: translateX(5px); /* Desplazamiento suave al flotar */
+  }
+
+  .nav-link.active {
+    background: var(--aqua-neon) !important;
+    color: #000000 !important; /* Texto oscuro para contraste */
+    font-weight: 600;
+    box-shadow: 0 0 20px rgba(0, 242, 255, 0.4);
+  }
+
+  .nav-link.active i {
+    color: #000000 !important;
+  }
+
+  .btn-close-white {
+    filter: invert(1) sepia(100%) saturate(5000%) hue-rotate(150deg); /* X color aqua */
+  }
+
+  /* Buscador personalizado */
+  .search-box {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(0, 242, 255, 0.1);
+    color: white;
+  }
+  
+  .search-box:focus {
+    background: rgba(255,255,255,0.1);
+    border-color: var(--aqua-neon);
+    box-shadow: 0 0 10px rgba(0, 242, 255, 0.3);
+    color: white;
+  }
+
+  .search-box-dark-text {
+    background: rgba(255, 255, 255, 0.901);
+ /* Un poco más de fondo para que se vea el texto negro */
+    border: 1.5 solid rgba(0, 242, 255, 0.3);
+    color: #000000 !important; /* Texto negro forzado */
+    font-weight: 500;
+}
+
+/* Mantenemos el efecto neón al hacer focus */
+.search-box-dark-text:focus {
+    background: rgba(244, 245, 246, 0.2);
+    border-color: var(--aqua-neon);
+    box-shadow: 0 0 15px rgba(0, 242, 255, 0.4);
+    color: #000000 !important;
+    outline: none;
+}
+/* Permite hacer clic a través de la capa invisible del offcanvas */
+.offcanvas-backdrop {
+    display: none !important; /* Elimina cualquier rastro de la capa de bloqueo */
+}
+
+/* Asegura que el contenido principal sea interactuable */
+body.offcanvas-open {
+    overflow: auto !important; /* Evita que Bootstrap bloquee el scroll del cuerpo */
+}
+
+/* Si el sidebar está en modo 'show' (fijo), ajustamos el z-index */
+.offcanvas.show {
+    z-index: 1045; /* El sidebar se queda arriba */
+}
+
+main.container {
+    position: relative;
+    z-index: 1040; /* El contenido se queda justo debajo para recibir clics */
+}
+/* 1. Asegurar que el sidebar esté por encima de TODO */
+.offcanvas {
+    z-index: 1060 !important; /* Valor superior al navbar y al contenido */
+    background-color: #12121b !important; /* Color sólido, sin transparencia */
+    opacity: 1 !important;
+    visibility: visible !important;
+}
+
+/* 2. El Navbar también debe estar arriba, pero debajo del offcanvas si se cruzan */
+.navbar {
+    z-index: 1050 !important;
+}
+
+/* 3. El contenido principal debe estar por debajo durante la transición */
+main.container {
+    position: relative;
+    z-index: 1; /* Valor bajo para que no traspase el menú */
+}
+
+
+/* --- BOTÓN PRINCIPAL (AQUA) --- */
+.btn-neon-aqua {
+    background-color: transparent;
+    color: #008c9e !important;
+    border: 2px solid #00f2ff !important;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    transition: all 0.3s ease;
+}
+
+.btn-neon-aqua:hover {
+    background-color: #00f2ff !important;
+    color: #000 !important;
+    box-shadow: 0 0 15px rgba(0, 242, 255, 0.6);
+}
+
+/* --- BOTÓN CANCELAR (ROJO NEÓN) --- */
+.btn-neon-red {
+    background-color: transparent;
+    color: #d9534f !important;
+    border: 2px solid #ff4d4d !important;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    transition: all 0.3s ease;
+}
+
+.btn-neon-red:hover {
+    background-color: #ff4d4d !important;
+    color: #fff !important;
+    box-shadow: 0 0 15px rgba(255, 77, 77, 0.6);
+}
+
+/* --- BOTÓN WARNING (AMARILLO/ORO) --- */
+.btn-neon-yellow {
+    background-color: transparent;
+    color: #856404 !important;
+    border: 2px solid #ffcc00 !important;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    transition: all 0.3s ease;
+}
+
+.btn-neon-yellow:hover {
+    background-color: #ffcc00 !important;
+    color: #000 !important;
+    box-shadow: 0 0 15px rgba(255, 204, 0, 0.6);
+}
+
+/* "Blindaje" para que el sidebar ignore los estilos de label de fondo blanco */
+.offcanvas label {
+    color: var(--aqua-neon) !important;
+    text-shadow: 0 0 10px rgba(0, 242, 255, 0.5) !important;
+    text-transform: none; /* O lo que prefieras para el menú */
+}
+
+/* Estilo uniforme para Labels sobre fondo blanco */
+label {
+    color: #2c3e50 !important; /* Gris Grafito */
+    font-size: 0.85rem !important;
+    font-weight: 700 !important;
+    text-transform: uppercase !important; /* Mayúsculas técnicas */
+    letter-spacing: 1.5px !important; /* Espaciado entre letras */
+    margin-bottom: 8px !important;
+    display: block;
+    
+    /* Resplandor tenue (Shadow suave en lugar de neón fuerte) */
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease-in-out;
+}
+
+/* Efecto al interactuar con el input */
+.mb-3:focus-within label {
+    color: #008c9e !important; /* Cambia a un turquesa oscuro al escribir */
+    transform: translateX(3px); /* Desplazamiento lateral sutil */
+}
+/* 1. Estilo para el selector de fecha (el icono del calendario) */
+input[type="date"]::-webkit-calendar-picker-indicator {
+    filter: invert(48%) sepia(13%) saturate(3207%) hue-rotate(130deg) brightness(95%) contrast(80%);
+    cursor: pointer;
+}
+
+/* 2. Estilo para el botón de "Seleccionar archivo" */
+input[type="file"]::file-selector-button {
+    background-color: #f8f9fa;
+    color: #2c3e50;
+    border: 1px solid #d1d8e0;
+    border-radius: 5px;
+    padding: 5px 10px;
+    margin-right: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.7rem;
+    transition: all 0.3s ease;
+}
+
+input[type="file"]::file-selector-button:hover {
+    background-color: #00f2ff;
+    border-color: #00f2ff;
+    color: black;
+}
+
+.checkbox_c{
+    background-color: #00f2ff;
+    border-color: #00f2ff;
+    color: black;
+}
+/* Contenedor del título para darle estructura */
+.view-header {
+    margin-bottom: 2rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid #f0f0f0; /* Línea base sutil */
+    position: relative;
+}
+
+/* El título principal */
+.view-title {
+    color: #2c3e50; /* Gris Grafito */
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    font-size: 1.75rem;
+    margin: 0;
+    display: inline-block;
+    position: relative;
+}
+
+/* Detalle Aqua debajo del título */
+.view-title::after {
+    content: "";
+    position: absolute;
+    bottom: -0.7rem; /* Se alinea con la línea base del contenedor */
+    left: 0;
+    width: 60px; /* Línea corta decorativa */
+    height: 4px;
+    background: var(--aqua-neon);
+    box-shadow: 0 0 10px rgba(0, 242, 255, 0.5);
+    border-radius: 2px;
+}
+
+/* 1. Definimos la animación "respiración neón" */
+@keyframes neon-pulse-slow {
+    0%, 100% {
+        opacity: 1;
+        box-shadow: 0 0 10px rgba(0, 242, 255, 0.8); /* Brillo intenso */
+    }
+    50% {
+        opacity: 0.4; /* Se atenúa sin desaparecer */
+        box-shadow: 0 0 2px rgba(0, 242, 255, 0.2); /* Brillo débil */
+    }
+}
+
+/* 2. Aplicamos la animación a tu elemento */
+.view-title::after {
+    content: "";
+    position: absolute;
+    bottom: -0.7rem;
+    left: 0;
+    width: 60px;
+    height: 4px;
+    background: var(--aqua-neon);
+    border-radius: 2px;
+    
+    /* Agregamos la animación: 
+       - neon-pulse-slow: nombre de la animación
+       - 3s: duración (lento)
+       - ease-in-out: suavidad (acelera y frena suavemente)
+       - infinite: nunca se detiene
+    */
+    animation: neon-pulse-slow 5s ease-in-out infinite;
+}
+
+/* Subtítulo o descripción opcional */
+.view-subtitle {
+    color: #95a5a6;
+    font-size: 0.9rem;
+    margin-top: 0.5rem;
+    display: block;
+    font-weight: 400;
+}
+.error-text {
+    color: #ff4d4d; /* Rojo Coral Neón */
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-top: 5px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    /* Un parpadeo muy sutil para llamar la atención */
+    animation: simple-flicker 2s infinite;
+}
+
+.error-text::before {
+    content: "\F33A"; /* Código de icono de advertencia de Bootstrap Icons */
+    font-family: "bootstrap-icons";
+}
+
+@keyframes simple-flicker {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+}
+/* Estado Normal (No marcado / Blanco) */
+.checkbox_c {
+    /* 1. Eliminamos el estilo nativo del navegador */
+    -webkit-appearance: none;
+    appearance: none;
+    
+    /* 2. Definimos tamaño y forma */
+    width: 20px;
+    height: 20px;
+    border-radius: 4px; /* Opcional: bordes redondeados */
+    cursor: pointer;
+    
+    /* 3. Colores cuando NO está marcado */
+    background-color: white;      /* Fondo Blanco */
+    border: 2px solid #00f2ff;    /* Borde turquesa para que se vea */
+    transition: all 0.3s ease;    /* Transición suave */
+    
+    /* Posición relativa para poder dibujar el "check" o palomita después */
+    position: relative;
+    display: inline-block;
+    vertical-align: middle;
+}
+
+/* Estado Marcado (Checked / Turquesa + Neón) */
+.checkbox_c:checked {
+    background-color: #00f2ff;
+    border-color: #00f2ff;
+    
+    /* EFECTO NEÓN: Sombra brillante difuminada */
+    box-shadow: 0 0 10px #00f2ff, 
+                0 0 20px #00f2ff, 
+                0 0 40px #00f2ff;
+}
+
+/* Dibujar la "palomita" o "check" (✔) */
+.checkbox_c::after {
+    content: '';
+    position: absolute;
+    display: none; /* Oculto por defecto */
+    
+    /* Forma del Check */
+    left: 6px;
+    top: 2px;
+    width: 5px;
+    height: 10px;
+    border: solid black; /* Color negro como pediste */
+    border-width: 0 3px 3px 0;
+    transform: rotate(45deg);
+}
+
+/* Mostrar la palomita cuando esté marcado */
+.checkbox_c:checked::after {
+    display: block;
+}
+</style>
+
+
+
+</head>
+
+<body>
+ <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
+
+<nav class="navbar bg-dark fixed-top shadow-sm" data-bs-theme="dark">
+  <div class="container-fluid">
+    <button class="navbar-toggler border-0" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasNavbar">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <a class="navbar-brand fw-bold ms-2" href="#" style="color: var(--aqua-neon);"> <i class="bi bi-person-circle"></i> {{ user.username }}</a>
+
+   <div class="offcanvas offcanvas-start show" 
+     data-bs-backdrop="false" 
+     data-bs-scroll="true" 
+     tabindex="-1" 
+     id="offcanvasNavbar">
+      <div class="offcanvas-header">
+        <h5 class="offcanvas-title" id="offcanvasNavbarLabel">Navigation</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas"></button>
+      </div>
+      
+      <div class="offcanvas-body">
+        <ul class="navbar-nav flex-grow-1">
+          <li class="nav-item">
+            <a class="nav-link active" href="/">
+              <i class="bi bi-speedometer2"></i> Home
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="/signup">
+              <i class="bi bi-cpu"></i> Sign up
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="/signin">
+              <i class="bi bi-cpu"></i> Sign in
+            </a>
+          </li>
+          {% if user.is_authenticated %}
+          <li class="nav-item">
+            <a class="nav-link" href="{% url 'tasks' %}">
+              <i class="bi bi-cpu"></i> Tasks pending
+            </a>
+          </li>
+            <li class="nav-item">
+            <a class="nav-link" href="{% url 'tasks_completed' %}">
+              <i class="bi bi-cpu"></i> Tasks completed
+            </a>
+          </li>
+            <li class="nav-item">
+            <a class="nav-link" href="/tasks/create">
+              <i class="bi bi-cpu"></i> Create tasks
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="bi bi-shield-lock nav-link" href="/logout"> Log out</a>
+          </li>
+          {% endif %}
+        </ul>
+        
+        <form class="d-flex mt-4 px-2" role="search">
+          <input class="form-control search-box me-2" type="search" placeholder="Search system..." aria-label="Search">
+        </form>
+        <p>Todos los derechos reservados. L&N Desarrollos.</p>
+        <p>Version 20260103</p>
+
+      </div>
+    </div>
+  </div>
+</nav>
+
+
+<main class="container mt-4">
+  
+    {% block content %}
+    {% endblock %}
+</main>
+
+</body>
+</html>

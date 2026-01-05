@@ -1,0 +1,115 @@
+{% extends 'base_login.html' %}
+{% load static %}
+
+{% block content %}
+{% load widget_tweaks %}
+
+{# --- ESTILOS CSS ESPECÍFICOS PARA PANTALLA DIVIDIDA --- #}
+<style>
+    /* 1. La estructura principal debe ocupar al menos toda la altura de la pantalla */
+    .full-screen-split {
+        min-height: 100vh;
+        overflow-x: hidden; /* Evita scroll horizontal innecesario */
+    }
+
+    /* 2. Estilos para la columna de la imagen (Izquierda) */
+    .login-image-col {
+        padding: 0 !important; /* CRÍTICO: Sin padding para tocar los bordes */
+        position: relative;
+        /* En pantallas medianas hacia arriba, forzamos la altura completa */
+        @media (min-width: 768px) {
+            height: 100vh;
+        }
+    }
+
+    /* 3. La imagen en sí misma */
+    .login-cover-image {
+        position: absolute; /* Posición absoluta para llenar su columna padre */
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover; /* Magia: Recorta la imagen para llenar sin deformar */
+        object-position: center center; /* Centra el foco de la imagen */
+        z-index: 0;
+    }
+    
+    /* 4. Estilos para la columna del formulario (Derecha) */
+    .login-form-col {
+        /* Asegura que el fondo sea sólido (cámbialo si tu fondo general no es blanco) */
+        background-color: #ffffff; 
+        padding: 3rem; /* Espacio interno para que el formulario no toque los bordes */
+        
+        /* En pantallas medianas hacia arriba, forzamos la altura completa */
+        @media (min-width: 768px) {
+            height: 100vh;
+            overflow-y: auto; /* Si el formulario es muy alto, permite scroll solo en esta parte */
+        }
+    }
+    .login-logo {
+        width: 100%;         /* Forza el ancho al 100% del contenedor (igual que el form) */
+        height: auto;        /* Mantiene la proporción para no deformarse */
+        max-height: 150px;   /* Opcional: Evita que sea gigantesco si el logo es muy alto */
+        object-fit: contain; /* Asegura que se vea todo el logo */
+        display: block;      /* Comportamiento de bloque */
+    }
+</style>
+
+
+{# Usamos container-fluid y p-0 para eliminar márgenes externos #}
+<main class="container-fluid p-0">    
+    {# g-0 elimina los espacios (gutters) entre las columnas #}
+    <div class="row g-0">
+        
+        {# --- COLUMNA IZQUIERDA: IMAGEN (7 columnas) --- #}
+        {# d-none d-md-block: Oculta la imagen en móviles, la muestra en tablet/PC #}
+        <div class="col-md-7 d-none d-md-block login-image-col">
+            <img src="{% static 'login_3.jpg' %}" 
+                 alt="Login Background" 
+                 class="login-cover-image">
+            {# Opcional: Un overlay oscuro si tu texto de marca no se lee bien sobre la imagen #}
+            {# <div style="position:absolute; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.3); z-index:1;"></div> #}
+        </div>
+
+
+        {# --- COLUMNA DERECHA: FORMULARIO (5 columnas) --- #}
+        {# d-flex flex-column justify-content-center: CENTRA VERTICALMENTE EL CONTENIDO #}
+        <section class="col-md-5 login-form-col d-flex flex-column justify-content-center text-center shadow-lg">
+            
+            {# --- EL CONTENIDO DEL LOGIN SE MANTIENE IGUAL --- #}
+            <div class="login-form-content p-md-4"> {# Un contenedor interno para dar un poco más de aire #}
+    <img src="{% static 'logo.png' %}" alt="Logo Empresa" class="login-logo mb-4">
+                <div class="view-header mb-4">
+           
+                    <h1 class="view-title display-4" style="color: #00f2ff;">SISTEMA DE GESTIÓN DE PLANILLAS</h1>
+                    <span class="view-subtitle text-uppercase letter-spacing fw-bold"><i class="bi bi-person-circle"></i> Inicio de Sesión</span>
+                </div>
+                
+                {{ error }}
+                
+                <form action="/signin/" method="POST" class="text-start">
+                    {% csrf_token %}
+                    
+                   {% for field in form %}
+      <div class="mb-3">
+        <label>{{ field.label }}</label>
+        {# Aquí inyectamos la clase de Bootstrap y nuestra lógica neón #}
+        {{ field|add_class:"form-control search-box-dark-text" }}
+        
+        {% if field.errors %}
+          <div class="text-danger small">{{ field.errors }}</div>
+        {% endif %}
+      </div>
+    {% endfor %}
+
+                    <div class="d-grid gap-2 mt-5">
+                        <button class="btn btn-neon-aqua px-4">
+                          <i class="bi bi-box-arrow-right"></i>  Ingresar 
+                        </button>
+                    </div>
+                </form>
+            </div> </section>
+
+    </div>
+</main>
+{% endblock %}
