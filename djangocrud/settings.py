@@ -87,7 +87,7 @@ DATABASES = {
     'default': dj_database_url.config(
         # CAMBIA ESTA LÍNEA CON TUS DATOS LOCALES:
         # Formato: postgres://USUARIO:PASSWORD@LOCALHOST:PUERTO/NOMBRE_DB
-        default='postgres://postgres:Temporal1@localhost:5432/djangocrud_db',
+        default='postgres://postgres:postgres@localhost:5432/djangocrud_db',
         conn_max_age=600
     )
 }
@@ -136,4 +136,6 @@ if not DEBUG:
     STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
     STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+    
 
+#LOGIN_URL = '/signin'
